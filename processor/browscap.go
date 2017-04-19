@@ -2,7 +2,6 @@ package processor
 
 import (
 	"visitor/model"
-	"fmt"
 	"github.com/digitalcrab/browscap_go"
 )
 
@@ -10,10 +9,16 @@ const (
 	BROWSCAP_DB_PATH = "./db/browscap.ini"
 )
 
+type BrowsCap struct {
+	Browser model.Browser
+	Platform model.Platform
+	Device model.Device
+}
+
 type BrowsCapProcessor struct {
 }
 
-func (r *BrowsCapProcessor) Process(param string) (model.Browser, error) {
+func (r *BrowsCapProcessor) Process(param string) (BrowsCap, error) {
 
 	if err := browscap_go.InitBrowsCap(BROWSCAP_DB_PATH, false); err != nil {
 		panic(err)
@@ -22,15 +27,27 @@ func (r *BrowsCapProcessor) Process(param string) (model.Browser, error) {
 	browser, ok := browscap_go.GetBrowser(param)
 	if !ok || browser == nil {
 		panic("Browser not found")
-	} else {
-		fmt.Printf("Browser = %s [%s] v%s\n", browser.Browser, browser.BrowserType, browser.BrowserVersion)
-		fmt.Printf("Platform = %s v%s\n", browser.Platform, browser.PlatformVersion)
-		fmt.Printf("Device = %s [%s] %s\n", browser.DeviceName, browser.DeviceType, browser.DeviceBrand)
-		fmt.Printf("IsCrawler = %t\n", browser.IsCrawler())
-		fmt.Printf("IsMobile = %t\n", browser.IsMobile())
 	}
 
-	return model.Browser{
-		Type:"sdfsdf",
-	}, nil
+	browscap := BrowsCap{
+		Browser: model.Browser{
+			Name: browser.Browser,
+			MajorVer: browser.BrowserMajorVer,
+			MinorVer: browser.BrowserMinorVer,
+			Version: browser.BrowserVersion,
+			Type: browser.BrowserType,
+		},
+		Platform: model.Platform{
+			Name: browser.Platform,
+			Version: browser.PlatformVersion,
+			Short: browser.PlatformShort,
+		},
+		Device: model.Device{
+			Name: browser.DeviceName,
+			Brand: browser.DeviceBrand,
+			Type: browser.DeviceType,
+		},
+	}
+
+	return browscap, nil
 }
