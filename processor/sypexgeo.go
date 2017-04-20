@@ -57,6 +57,7 @@ func (r *SyPexGeoProcessor) Process(param string) (model.Geo, error) {
 		Country:model.Country{
 			Name: country["name_en"].(string),
 			Id: idConvert(country["id"]),
+			Iso: country["iso"].(string),
 		},
 	}, nil
 }

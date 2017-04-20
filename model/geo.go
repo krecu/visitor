@@ -1,7 +1,7 @@
 package model
 
 type Geo struct {
-	City City
-	Country Country
-	Location Location
+	City City		`json:"city"`
+	Country Country		`json:"country"`
+	Location Location	`json:"location"`
 }

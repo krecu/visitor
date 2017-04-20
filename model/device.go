@@ -1,7 +1,7 @@
 package model
 
 type Device struct {
-	Name string
-	Type string
-	Brand string
+	Name string	`json:"name"`
+	Type string	`json:"type"`
+	Brand string	`json:"brand"`
 }
