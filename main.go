@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// стартуем RPC сервер
-	lis, err := net.Listen("tcp", ":8082")
+	lis, err := net.Listen("tcp", conf.Grpc)
 	if err != nil {
 		log.Fatalf("failed start rpc-server: %v", err)
 	}

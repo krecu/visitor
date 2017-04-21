@@ -14,6 +14,7 @@ type ServerCache struct {
 type Config struct {
 	Cpu    int
 	Listen string
+	Grpc string
 	Ns string
 	Set string
 	Cache []ServerCache
