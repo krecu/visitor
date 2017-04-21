@@ -13,6 +13,11 @@ const (
 type SyPexGeoProcessor struct {
 }
 
+var (
+	syPexClient sypexgeo.SxGEO
+	isSpConnect int
+)
+
 // Вспомогательная функция конвертации, таиственных interface{}
 func idConvert(i interface{}) uint {
 	switch v := i.(type) {
@@ -28,9 +33,12 @@ func idConvert(i interface{}) uint {
 
 func (r *SyPexGeoProcessor) Process(param string) (model.Geo, error) {
 
-	geo := sypexgeo.New(SYPEX_DB_PATH)
+	if isSpConnect != 1 {
+		syPexClient = sypexgeo.New(SYPEX_DB_PATH)
+		isSpConnect = 1
+	}
 
-	record, err := geo.GetCityFull(param)
+	record, err := syPexClient.GetCityFull(param)
 
 	if err != nil {
 		return model.Geo{}, err

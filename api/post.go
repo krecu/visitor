@@ -13,6 +13,7 @@ type Body struct{
 	Ip string
 	Ua string
 	Hash string
+	Debug int
 }
 
 // ошибка
@@ -36,8 +37,8 @@ func (api *Method) Post(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// получаем данные о посетителе
-	visitor := core.Visitor{Ua: body.Ua, Ip: body.Ip, Id: body.Hash}
-	err = visitor.Identify()
+	coreVisitor := core.Visitor{Ua: body.Ua, Ip: body.Ip, Id: body.Hash}
+	visitor, err := coreVisitor.Identify()
 
 	// если при определении информации о посетителе возникла ошибка
 	if err != nil {
@@ -45,6 +46,7 @@ func (api *Method) Post(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// упаковываем структуру в json
 	jsonCode, err := json.Marshal(visitor)
 	if err != nil {
 		api.Error(rw, 102, "Неудалось преобразовать в JSON: " + err.Error())
@@ -54,12 +56,8 @@ func (api *Method) Post(rw http.ResponseWriter, req *http.Request) {
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(200)
 	rw.Write(jsonCode)
-}
 
-//
-//func (api *Api) Response(rw http.ResponseWriter, a ) {
-//
-//}
+}
 
 // @todo - как бы даделать общий оброботчик ошибок
 func (api *Method) Error(rw http.ResponseWriter, code int, error string) {
