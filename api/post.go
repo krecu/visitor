@@ -12,7 +12,7 @@ type Method struct {}
 type Body struct{
 	Ip string
 	Ua string
-	Hash string
+	Id string
 	Debug int
 }
 
@@ -37,7 +37,7 @@ func (api *Method) Post(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// получаем данные о посетителе
-	coreVisitor := core.Visitor{Ua: body.Ua, Ip: body.Ip, Id: body.Hash}
+	coreVisitor := core.Visitor{Ua: body.Ua, Ip: body.Ip, Id: body.Id}
 	visitor, err := coreVisitor.Identify()
 
 	// если при определении информации о посетителе возникла ошибка

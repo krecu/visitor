@@ -11,6 +11,11 @@ type ServerCache struct {
 	Port int
 }
 
+type GrayLog struct {
+	Host string
+	Port int
+}
+
 type Config struct {
 	Cpu    int
 	Listen string
@@ -18,6 +23,8 @@ type Config struct {
 	Ns string
 	Set string
 	Cache []ServerCache
+	Logger GrayLog
+
 }
 
 // загрузка конфига

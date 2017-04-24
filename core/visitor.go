@@ -6,8 +6,9 @@ import (
 	"time"
 	"visitor/storage"
 	"reflect"
-	"fmt"
 	"visitor/conf"
+	logger "visitor/log"
+	"encoding/json"
 )
 
 // основная структура
@@ -33,12 +34,30 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 
 	// если нашли посетителя в кеше то берем от туда
 	// иначе вычисляем его и записываем в кеш
-	if record != nil || err != nil {
+	if record != nil && err == nil {
 		visitor = v.UnMarshal(record)
 	} else {
 
+		if err != nil {
+
+			logger.Notify(logger.Message{
+				ShortMessage: "Error fetch visitor from cache: " + v.Id + "; error: " + err.Error(),
+				State: "error",
+			})
+		}
+
 		// собираем данные по браузеру
 		browser, err := new(processor.BrowsCapProcessor).Process(v.Ua)
+
+		if err != nil {
+
+			logger.Notify(logger.Message{
+				ShortMessage: "Error process browser data: " + v.Ua + "; error: " + err.Error(),
+				State: "error",
+			})
+
+			return model.Visitor{}, err
+		}
 
 		// собираем данные по гео
 		geo, err = new(processor.SyPexGeoProcessor).Process(v.Ip)
@@ -47,7 +66,13 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 		if err != nil {
 			geo, err = new(processor.MaxMindProcessor).Process(v.Ip)
 			if err != nil {
-				return visitor, err
+
+				logger.Notify(logger.Message{
+					ShortMessage: "Error process geo data: " + v.Ip + "; error: " + err.Error(),
+					State: "error",
+				})
+
+				return model.Visitor{}, err
 			}
 		}
 
@@ -57,7 +82,13 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 		// формируем персональные данные
 		personal, err := new(processor.PersonalProcessor).Process(v.Ua)
 		if err != nil {
-			return visitor, err
+
+			logger.Notify(logger.Message{
+				ShortMessage: "Error process personal data: " + v.Ua,
+				State: "error",
+			})
+
+			return model.Visitor{}, err
 		}
 
 		visitor = model.Visitor{
@@ -68,6 +99,7 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 			Country: geo.Country,
 			Location: geo.Location,
 			Browser: browser.Browser,
+			Postal: model.Postal{},
 			Device: browser.Device,
 			Platform: browser.Platform,
 			Personal: personal,
@@ -78,13 +110,22 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 		err = client.Put(v.Marshal(visitor))
 
 		if err != nil {
-			return visitor, err
+
+			logger.Notify(logger.Message{
+				ShortMessage: "Error marshal: " + v.Id,
+				State: "error",
+			})
+
+			return model.Visitor{}, err
 		}
 	}
 
-	// запоминаем потраченное время на определение инфо
-
-	fmt.Printf("Time duration: %v \n", time.Now().Sub(total))
+	jsonData, err := json.Marshal(visitor)
+	logger.Notify(logger.Message{
+		ShortMessage: string(jsonData),
+		State: "ok",
+		Duration: time.Now().Sub(total).Seconds(),
+	})
 
 	return visitor, nil
 }
