@@ -1,8 +1,12 @@
 {
-  "listen": ":8080",
-  "grps":":50051",
+  "web": ":50052",
+  "rpc":":50051",
   "cpu":  1,
-  "cache": [{"host": "127.0.0.1", "port": 3000}],
-  "ns" : "test",
-  "set": "users"
+  "cache": [{"host": "192.168.0.2", "port": 3000}],
+  "ns" : "visitor",
+  "set": "users",
+  "logger": {
+    "host": "192.168.0.48",
+    "port": 12201
+  }
 }

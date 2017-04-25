@@ -4,10 +4,8 @@ import (
 	"github.com/mirrr/go-sypexgeo"
 	"visitor/model"
 	"errors"
-)
-
-const (
-	SYPEX_DB_PATH = "./db/SxGeoCity.dat"
+	"path/filepath"
+	"os"
 )
 
 type SyPexGeoProcessor struct {
@@ -33,8 +31,13 @@ func idConvert(i interface{}) uint {
 
 func (r *SyPexGeoProcessor) Process(param string) (model.Geo, error) {
 
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+
 	if isSpConnect != 1 {
-		syPexClient = sypexgeo.New(SYPEX_DB_PATH)
+		syPexClient = sypexgeo.New(dir + "/db/SxGeoCity.dat")
 		isSpConnect = 1
 	}
 

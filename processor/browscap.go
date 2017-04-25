@@ -3,10 +3,8 @@ package processor
 import (
 	"visitor/model"
 	"github.com/digitalcrab/browscap_go"
-)
-
-const (
-	BROWSCAP_DB_PATH = "./db/browscap.ini"
+	"path/filepath"
+	"os"
 )
 
 type BrowsCap struct {
@@ -20,7 +18,12 @@ type BrowsCapProcessor struct {
 
 func (r *BrowsCapProcessor) Process(param string) (BrowsCap, error) {
 
-	if err := browscap_go.InitBrowsCap(BROWSCAP_DB_PATH, false); err != nil {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+
+	if err := browscap_go.InitBrowsCap(dir + "/db/browscap.ini", false); err != nil {
 		panic(err)
 	}
 

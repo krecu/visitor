@@ -4,6 +4,7 @@ import (
 	"os"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 )
 
 type ServerCache struct {
@@ -18,8 +19,8 @@ type GrayLog struct {
 
 type Config struct {
 	Cpu    int
-	Listen string
-	Grpc string
+	Web string
+	Rpc string
 	Ns string
 	Set string
 	Cache []ServerCache
@@ -30,8 +31,15 @@ type Config struct {
 // загрузка конфига
 func New() *Config{
 	c := new(Config)
-	file, _ := os.Open("conf.json")
-	err := json.NewDecoder(file).Decode(&c)
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+
+	file, _ := os.Open(dir + "/conf.json")
+	fmt.Println("Config loaded from: " + dir + "/conf.json")
+	err = json.NewDecoder(file).Decode(&c)
 	if err != nil {
 		fmt.Println("Configure failed: ", err)
 	}

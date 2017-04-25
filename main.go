@@ -11,6 +11,9 @@ import (
 	"net"
 	"visitor/core"
 	"encoding/json"
+	"flag"
+	"net/http"
+	"visitor/api"
 )
 
 type server struct{}
@@ -39,32 +42,55 @@ func (s *server) GetVisitor(ctx context.Context, in *pb.VisitorRequest) (*pb.Vis
 //
 func main() {
 
+	typeServer := flag.String("serve", "web", "Server type rpc/web")
+	cpuServer := flag.Int("cpu", 1, "Count usage cpu")
+	flag.Parse()
+
 	conf := config.New()
 
 	// юзаем заданное число процессоров
-	runtime.GOMAXPROCS(conf.Cpu)
+	runtime.GOMAXPROCS(int(*cpuServer))
 
-	// вешаем листнера на порт
-	lis, err := net.Listen("tcp", conf.Grpc)
-	if err != nil {
+	if *typeServer == "rpc" {
 
-		logger.Notify(logger.Message{
-			ShortMessage:"failed start rpc-server: " + err.Error(),
-			State: "error",
-		})
+		// вешаем листнера на порт
+		lis, err := net.Listen("tcp", conf.Rpc)
+		if err != nil {
 
-	}
+			logger.Notify(logger.Message{
+				ShortMessage: "failed start rpc-server: " + err.Error(),
+				State:        "error",
+			})
 
-	// стартуем RPC сервер
-	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
-	reflection.Register(s)
-	if err := s.Serve(lis); err != nil {
+		}
 
-		logger.Notify(logger.Message{
-			ShortMessage:"failed start rpc-server: " + err.Error(),
-			State: "error",
-		})
+		// стартуем RPC сервер
+		s := grpc.NewServer()
+		pb.RegisterGreeterServer(s, &server{})
+		reflection.Register(s)
+		if err := s.Serve(lis); err != nil {
 
+			logger.Notify(logger.Message{
+				ShortMessage: "failed start rpc-server: " + err.Error(),
+				State:        "error",
+			})
+
+		}
+	} else {
+
+		// стартуем вебсервер
+		apiHttp := api.Method{}
+		http.HandleFunc("/api/visitor", apiHttp.Post)
+
+		err := http.ListenAndServe(conf.Web, nil)
+
+		if err != nil {
+
+			logger.Notify(logger.Message{
+				ShortMessage:"Failed start web-server: " + err.Error(),
+				State: "error",
+			})
+
+		}
 	}
 }

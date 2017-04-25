@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"encoding/json"
 	"visitor/core"
+	"fmt"
 )
 
 type Method struct {}
@@ -61,6 +62,8 @@ func (api *Method) Post(rw http.ResponseWriter, req *http.Request) {
 
 // @todo - как бы даделать общий оброботчик ошибок
 func (api *Method) Error(rw http.ResponseWriter, code int, error string) {
+
+	fmt.Println(error)
 
 	body := new(Error)
 	body.error = error

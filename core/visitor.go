@@ -9,6 +9,7 @@ import (
 	"visitor/conf"
 	logger "visitor/log"
 	"encoding/json"
+	"fmt"
 )
 
 // основная структура
@@ -32,6 +33,8 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 	client := storage.AeroSpike{Host:conf.Cache[0].Host, Port:conf.Cache[0].Port, Ns: conf.Ns, Set: conf.Set}
 	record, err := client.Get(v.Id)
 
+	fmt.Println("New query: " + v.Ua + "; " + v.Ip + "; " + v.Id)
+
 	// если нашли посетителя в кеше то берем от туда
 	// иначе вычисляем его и записываем в кеш
 	if record != nil && err == nil {
@@ -39,7 +42,6 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 	} else {
 
 		if err != nil {
-
 			logger.Notify(logger.Message{
 				ShortMessage: "Error fetch visitor from cache: " + v.Id + "; error: " + err.Error(),
 				State: "error",

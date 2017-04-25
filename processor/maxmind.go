@@ -4,10 +4,8 @@ import (
 	"github.com/oschwald/geoip2-golang"
 	"net"
 	"visitor/model"
-)
-
-const (
-	MAXMIND_DB_PATH = "./db/GeoLite2-City.mmdb"
+	"path/filepath"
+	"os"
 )
 
 type MaxMindProcessor struct {
@@ -20,8 +18,14 @@ var (
 
 func (r *MaxMindProcessor) Process(param string) (model.Geo, error) {
 
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		panic(err)
+	}
+
 	if isMmConnect != 1 {
-		conn, err := geoip2.Open(MAXMIND_DB_PATH)
+		conn, err := geoip2.Open(dir + "/db/GeoLite2-City.mmdb")
 		if err != nil {
 			return model.Geo{}, err
 		}
