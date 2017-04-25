@@ -17,6 +17,7 @@ type Visitor struct {
 	Id string		`json:"id"`
 	Ua string		`json:"-"`
 	Ip string		`json:"-"`
+	Extra map[string]interface{} `json:"-"`
 	Time string		`json:"gen_time"`
 }
 
@@ -33,11 +34,10 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 	client := storage.AeroSpike{Host:conf.Cache[0].Host, Port:conf.Cache[0].Port, Ns: conf.Ns, Set: conf.Set}
 	record, err := client.Get(v.Id)
 
-	fmt.Println("New query: " + v.Ua + "; " + v.Ip + "; " + v.Id)
-
 	// если нашли посетителя в кеше то берем от туда
 	// иначе вычисляем его и записываем в кеш
 	if record != nil && err == nil {
+		fmt.Println(record)
 		visitor = v.UnMarshal(record)
 	} else {
 
@@ -62,20 +62,18 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 		}
 
 		// собираем данные по гео
-		geo, err = new(processor.SyPexGeoProcessor).Process(v.Ip)
+		geo, err = new(processor.GeoProcessor).Process(v.Ip)
 
 		// если Сайпекс ничего невернул или произошла ошибка
 		if err != nil {
-			geo, err = new(processor.MaxMindProcessor).Process(v.Ip)
-			if err != nil {
 
-				logger.Notify(logger.Message{
-					ShortMessage: "Error process geo data: " + v.Ip + "; error: " + err.Error(),
-					State: "error",
-				})
+			logger.Notify(logger.Message{
+				ShortMessage: "Error process geo data: " + v.Ip + "; error: " + err.Error(),
+				State: "error",
+			})
 
-				return model.Visitor{}, err
-			}
+			return model.Visitor{}, err
+
 		}
 
 		// формируем модель Ip
@@ -100,8 +98,9 @@ func (v *Visitor) Identify () (model.Visitor, error) {
 			City: geo.City,
 			Country: geo.Country,
 			Location: geo.Location,
+			Postal: geo.Postal,
+			Region: geo.Region,
 			Browser: browser.Browser,
-			Postal: model.Postal{},
 			Device: browser.Device,
 			Platform: browser.Platform,
 			Personal: personal,
@@ -183,15 +182,32 @@ func (v *Visitor) Marshal (visitor model.Visitor) (map[string]interface{}) {
 	record["pr_age"] = visitor.Personal.Age
 	record["pr_ge"] = visitor.Personal.Gender
 
+	// region
+	record["re_id"] = visitor.Region.Id
+	record["re_name"] = visitor.Region.Name
+
+	// postal
+	record["po_code"] = visitor.Postal.Code
+
 	// ip
 	record["ip_v4"] = visitor.Ip.V4
 	record["ip_v6"] = visitor.Ip.V6
+
+	record["st_campaign"] = []int{1, 2}
 
 	return record
 }
 
 // Распаковываем запись с аероспайка
 func (v *Visitor) UnMarshal (record map[string]interface{}) (model.Visitor) {
+
+	region := model.Region{}
+	if record["re_id"] != nil {
+		region = model.Region{
+			Id: 	uint(record["re_id"].(int)),
+			Name:   reflect.ValueOf(record["re_name"]).String(),
+		}
+	}
 
 	return model.Visitor{
 		Id: reflect.ValueOf(record["id"]).String(),
@@ -218,18 +234,22 @@ func (v *Visitor) UnMarshal (record map[string]interface{}) (model.Visitor) {
 		},
 		City: model.City{
 			Name: reflect.ValueOf(record["ct_name"]).String(),
-			Id:   111, //reflect.ValueOf(record["ct_id"]).Uint(),
+			Id:   uint(record["ct_id"].(int)),
 		},
 		Country: model.Country{
 			Name: reflect.ValueOf(record["cn_name"]).String(),
-			Id:   111, //reflect.ValueOf(record["cn_id"]).Int(),
+			Id:   uint(record["cn_id"].(int)),
 			Iso:   reflect.ValueOf(record["cn_iso"]).String(),
 		},
 		Location: model.Location{
-			Latitude: reflect.ValueOf(record["lc_lat"]).String(),
-			Longitude:  reflect.ValueOf(record["lc_lon"]).String(),
+			Latitude: float32(record["lc_lat"].(float64)),
+			Longitude:  float32(record["lc_lon"].(float64)),
 			TimeZone:   reflect.ValueOf(record["lc_tz"]).String(),
 		},
+		Postal: model.Postal{
+			Code:   reflect.ValueOf(record["po_code"]).String(),
+		},
+		Region: region,
 		Personal: model.Personal{
 			Gender: reflect.ValueOf(record["pr_ge"]).String(),
 			Age:  reflect.ValueOf(record["pr_age"]).String(),

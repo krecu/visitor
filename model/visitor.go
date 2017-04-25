@@ -8,6 +8,7 @@ type Visitor struct {
 	Country Country		`json:"country"`
 	Location Location	`json:"location"`
 	Postal Postal		`json:"postal"`
+	Region Region		`json:"region"`
 	Browser Browser		`json:"browser"`
 	Device Device		`json:"device"`
 	Platform Platform	`json:"platform"`

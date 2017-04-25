@@ -14,6 +14,7 @@ type Body struct{
 	Ip string
 	Ua string
 	Id string
+	Extra map[string]interface{}
 	Debug int
 }
 
@@ -38,7 +39,7 @@ func (api *Method) Post(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// получаем данные о посетителе
-	coreVisitor := core.Visitor{Ua: body.Ua, Ip: body.Ip, Id: body.Id}
+	coreVisitor := core.Visitor{Ua: body.Ua, Ip: body.Ip, Id: body.Id, Extra:body.Extra}
 	visitor, err := coreVisitor.Identify()
 
 	// если при определении информации о посетителе возникла ошибка

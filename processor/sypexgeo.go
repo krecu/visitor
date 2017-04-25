@@ -6,6 +6,7 @@ import (
 	"errors"
 	"path/filepath"
 	"os"
+	"fmt"
 )
 
 type SyPexGeoProcessor struct {
@@ -25,7 +26,12 @@ func idConvert(i interface{}) uint {
 		return uint(v.(uint8))
 	case uint16, uint32, uint64:
 		return uint(v.(uint32))
+	case float64:
+		return uint(v)
+	case float32:
+		return uint(v)
 	}
+
 	return 0
 }
 
@@ -43,12 +49,15 @@ func (r *SyPexGeoProcessor) Process(param string) (model.Geo, error) {
 
 	record, err := syPexClient.GetCityFull(param)
 
+	fmt.Println(record)
+
 	if err != nil {
 		return model.Geo{}, err
 	}
 
 	var country = record["country"].(map[string]interface{})
 	var city = record["city"].(map[string]interface{})
+	var region = record["region"].(map[string]interface{})
 
 	// Если не определили страну
 	if country["name_en"] == "" {
@@ -69,6 +78,14 @@ func (r *SyPexGeoProcessor) Process(param string) (model.Geo, error) {
 			Name: country["name_en"].(string),
 			Id: idConvert(country["id"]),
 			Iso: country["iso"].(string),
+		},
+		Region:model.Region{
+			Name: region["name_en"].(string),
+			Id: idConvert(region["id"]),
+		},
+		Location:model.Location{
+			Latitude: city["lat"].(float32),
+			Longitude: city["lon"].(float32),
 		},
 	}, nil
 }
